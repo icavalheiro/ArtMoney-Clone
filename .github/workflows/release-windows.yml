@@ -20,17 +20,18 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: "17" # Android Gradle Plugin 8.5.x requires Java 17+
           cache: gradle
 
       - name: Build Windows executable
         shell: pwsh
-        run: .\gradlew.bat :composeApp:packageReleaseExe
+        run: .\gradlew.bat :composeApp:packageReleaseExe --stacktrace
 
       - name: Find generated executable
         id: find_exe
         shell: pwsh
         run: |
+          # Compose output directories differ between plugin versions, so check both known layouts.
           $artifactDirectories = @(
             "composeApp/build/compose/binaries/main/release/exe",
             "composeApp/build/compose/binaries/main-release/exe"
