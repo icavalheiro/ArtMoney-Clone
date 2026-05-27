@@ -31,14 +31,22 @@ jobs:
         id: find_exe
         shell: pwsh
         run: |
-          $exe = Get-ChildItem -Path "composeApp/build/compose/binaries" -Recurse -File -Filter *.exe |
-            Where-Object { $_.FullName -match '[\\/]exe[\\/]' } |
-            Sort-Object LastWriteTime -Descending |
-            Select-Object -First 1
+          $artifactDirectories = @(
+            "composeApp/build/compose/binaries/main/release/exe",
+            "composeApp/build/compose/binaries/main-release/exe"
+          ) | Where-Object { Test-Path $_ }
 
-          if (-not $exe) {
-            throw "No release executable was generated."
+          if (-not $artifactDirectories) {
+            throw "No Compose Windows release output directory was found."
           }
+
+          $executables = Get-ChildItem -Path $artifactDirectories -File -Filter *.exe
+
+          if ($executables.Count -ne 1) {
+            throw "Expected exactly one release executable, found $($executables.Count)."
+          }
+
+          $exe = $executables[0]
 
           "exe_path=$($exe.FullName)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
           "exe_name=$($exe.Name)" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
